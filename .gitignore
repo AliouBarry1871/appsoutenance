@@ -1,0 +1,52 @@
+# ==========================================
+# Git Ignore - SamaKeur (AppSoutenance)
+# ==========================================
+
+# IDE & Editeurs
+.idea/
+**/.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+**/.vscode/
+.classpath
+.project
+.settings/
+
+# OS & Système
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node.js & Angular
+node_modules/
+**/node_modules/
+.angular/
+**/.angular/
+dist/
+**/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Java & Spring Boot Maven
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# Logs & Fichiers temporaires
+*.log
+logs/
+**/logs/
+tmp/
+**/tmp/
