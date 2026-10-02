@@ -38,11 +38,13 @@ type ImageType = string | { imageUrl?: string; url?: string } | null;
             <!-- Bouton Réserver ce bien (si disponible) -->
             <button *ngIf="isPropertyAvailable()" 
                     (click)="openReserveModal()"
-                    class="px-4 py-2 text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer">
-              <span>🏷️</span> Réserver
+                    type="button"
+                    class="px-5 py-2 text-xs sm:text-sm font-black text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 rounded-xl shadow-md transition-all duration-150 flex items-center gap-2 cursor-pointer border border-emerald-500">
+              <span class="text-sm sm:text-base">🏷️</span>
+              <span class="tracking-wide">Réserver ce bien</span>
             </button>
             <span *ngIf="!isPropertyAvailable()" 
-                  class="px-3.5 py-2 text-xs font-bold text-amber-900 bg-amber-100 rounded-xl border border-amber-300 flex items-center gap-1.5">
+                  class="px-4 py-2 text-xs font-bold text-amber-900 bg-amber-100 rounded-xl border border-amber-300 flex items-center gap-1.5 shadow-2xs">
               <span>🔒</span> Bien réservé
             </span>
 
@@ -328,11 +330,23 @@ type ImageType = string | { imageUrl?: string; url?: string } | null;
                 </div>
               </div>
 
-              <!-- Boutons de Contact Direct avec l'Agence -->
+              <!-- Boutons de Contact Direct avec l'Agence & Réservation -->
               <div class="space-y-2.5 pt-2">
+                <!-- Bouton Réserver ce bien (action principale) -->
+                <button *ngIf="isPropertyAvailable()" 
+                        (click)="openReserveModal()"
+                        type="button"
+                        class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white rounded-xl font-black text-sm transition shadow-md cursor-pointer flex items-center justify-center gap-2 border border-emerald-500">
+                  <span class="text-base">🏷️</span>
+                  <span>Réserver ce logement</span>
+                </button>
+                <div *ngIf="!isPropertyAvailable()" class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-center">
+                  <span class="text-xs font-bold text-amber-900">🔒 Ce bien est actuellement réservé</span>
+                </div>
+
                 <!-- Bouton WhatsApp avec message pré-rempli -->
                 <a [href]="getWhatsAppUrl()" target="_blank" rel="noopener noreferrer"
-                   class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm transition shadow-sm cursor-pointer flex items-center justify-center gap-2">
+                   class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-sm transition shadow-sm cursor-pointer flex items-center justify-center gap-2">
                   <span>💬</span> Discuter sur WhatsApp
                 </a>
 
@@ -802,9 +816,9 @@ export class PropertyDetailPageComponent implements OnInit {
   }
 
   isPropertyAvailable(): boolean {
-    if (!this.property) return false;
-    const status = (this.property.status || '').toString().toUpperCase();
-    return !status || status === 'AVAILABLE' || status === 'DISPONIBLE';
+    if (!this.property) return true;
+    const s = String(this.property.status || '').trim().toUpperCase();
+    return s !== 'RESERVED' && s !== 'RESERVE' && s !== 'RENTED' && s !== 'LOUE' && s !== 'SOLD' && s !== 'VENDU' && s !== 'UNAVAILABLE' && s !== 'INDISPONIBLE';
   }
 
   openReserveModal(): void {

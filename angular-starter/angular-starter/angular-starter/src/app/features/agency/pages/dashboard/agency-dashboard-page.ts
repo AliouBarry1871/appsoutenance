@@ -459,8 +459,8 @@ import { SENEGAL_CITIES, SENEGAL_ZONES } from '../../../../core/constants/senega
             <button type="button" (click)="selectedPaymentMethod = 'WAVE'"
                     [class]="selectedPaymentMethod === 'WAVE' ? 'border-sky-500 bg-sky-50/60 ring-2 ring-sky-500 shadow-sm' : 'border-gray-200 hover:border-gray-300'"
                     class="p-3 border rounded-xl flex items-center gap-3 transition cursor-pointer text-left">
-              <div class="w-10 h-10 rounded-xl overflow-hidden shadow-xs shrink-0 bg-[#1dc3f9]">
-                <img src="assets/images/wave-logo.svg" alt="Wave Sénégal" class="w-full h-full object-contain p-0.5" />
+              <div class="w-10 h-10 rounded-xl overflow-hidden shadow-xs shrink-0 bg-white border border-gray-100 flex items-center justify-center">
+                <img src="assets/images/logo-wave.webp" alt="Wave Sénégal" class="w-full h-full object-contain" />
               </div>
               <div>
                 <div class="text-xs font-bold text-gray-900 flex items-center gap-1.5">
@@ -474,8 +474,8 @@ import { SENEGAL_CITIES, SENEGAL_ZONES } from '../../../../core/constants/senega
             <button type="button" (click)="selectedPaymentMethod = 'ORANGE_MONEY'"
                     [class]="selectedPaymentMethod === 'ORANGE_MONEY' ? 'border-orange-500 bg-orange-50/60 ring-2 ring-orange-500 shadow-sm' : 'border-gray-200 hover:border-gray-300'"
                     class="p-3 border rounded-xl flex items-center gap-3 transition cursor-pointer text-left">
-              <div class="w-10 h-10 rounded-xl overflow-hidden shadow-xs shrink-0 bg-[#121212]">
-                <img src="assets/images/orange-money-logo.svg" alt="Orange Money" class="w-full h-full object-contain p-0.5" />
+              <div class="w-10 h-10 rounded-xl overflow-hidden shadow-xs shrink-0 bg-white border border-gray-100 flex items-center justify-center">
+                <img src="assets/images/logo-orange-money.webp" alt="Orange Money" class="w-full h-full object-contain" />
               </div>
               <div>
                 <div class="text-xs font-bold text-gray-900 flex items-center gap-1.5">
