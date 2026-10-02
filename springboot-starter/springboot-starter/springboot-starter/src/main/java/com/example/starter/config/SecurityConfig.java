@@ -53,9 +53,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/agencies/**", "/api/v1/agencies/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/agency/**", "/api/v1/reviews/agency/**").permitAll()
 
-                        // 5.bis Réservation et compteur de notifications non lues
-                        .requestMatchers("/api/properties/*/reserve", "/api/properties/**/reserve", "/api/v1/properties/*/reserve", "/api/v1/properties/**/reserve").permitAll()
+                        // 5.bis Réservation, compteur de notifications et vérification favoris
+                        .requestMatchers("/api/properties/*/reserve", "/api/v1/properties/*/reserve").permitAll()
                         .requestMatchers("/api/notifications/unread-count", "/api/v1/notifications/unread-count").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/favorites/check/**", "/api/v1/favorites/check/**").permitAll()
 
                         // 6. Modifications et créations d'annonces
                         .requestMatchers(HttpMethod.PUT, "/api/properties/**", "/api/v1/properties/**").authenticated()

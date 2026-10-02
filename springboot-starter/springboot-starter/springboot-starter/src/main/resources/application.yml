@@ -1,5 +1,10 @@
 server:
   port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always
+    include-exception: true
 
 spring:
   datasource:
@@ -9,7 +14,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
-    open-in-view: false
+    open-in-view: true
     hibernate:
       ddl-auto: update
     show-sql: true

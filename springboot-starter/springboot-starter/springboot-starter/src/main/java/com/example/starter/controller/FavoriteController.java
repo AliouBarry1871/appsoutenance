@@ -66,18 +66,25 @@ public class FavoriteController {
     }
 
     @GetMapping("/check/{propertyId}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Boolean>> checkIsFavorite(
             @PathVariable Long propertyId,
             @AuthenticationPrincipal UserDetails userDetails,
             Authentication authentication
     ) {
-        String username = null;
+        boolean fav = false;
         try {
-            username = extractUsername(userDetails, authentication);
+            String username = null;
+            if (userDetails != null && userDetails.getUsername() != null && !userDetails.getUsername().isBlank()) {
+                username = userDetails.getUsername();
+            } else if (authentication != null && authentication.getName() != null && !authentication.getName().isBlank() && !"anonymousUser".equals(authentication.getName())) {
+                username = authentication.getName();
+            }
+            if (username != null) {
+                fav = favoriteService.isFavorite(propertyId, username);
+            }
         } catch (Exception ignored) {
+            fav = false;
         }
-        boolean fav = username != null && favoriteService.isFavorite(propertyId, username);
         return ResponseEntity.ok(Map.of("isFavorite", fav));
     }
 }

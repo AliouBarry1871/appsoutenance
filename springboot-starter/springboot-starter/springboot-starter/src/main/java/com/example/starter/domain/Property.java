@@ -65,6 +65,7 @@ public class Property {
     private Double area = 0.0;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 32)
     private PropertyStatus status;
 
     @ManyToOne(fetch = FetchType.EAGER)
