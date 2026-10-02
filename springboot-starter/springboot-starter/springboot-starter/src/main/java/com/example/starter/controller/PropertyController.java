@@ -50,6 +50,15 @@ public class PropertyController {
         return ResponseEntity.ok(propertyService.getPropertiesByAgencyId(agencyId));
     }
 
+    // Réservation d'un bien par un client (disparition immédiate de l'annonce et notification agence)
+    @PostMapping("/{id}/reserve")
+    public ResponseEntity<Property> reserveProperty(
+            @PathVariable Long id,
+            @RequestBody @jakarta.validation.Valid com.example.starter.dto.ReservationRequest request
+    ) {
+        return ResponseEntity.ok(propertyService.reserveProperty(id, request));
+    }
+
     // --- Endpoints Protégés (Agence & Administration) ---
 
     @GetMapping("/my-properties")

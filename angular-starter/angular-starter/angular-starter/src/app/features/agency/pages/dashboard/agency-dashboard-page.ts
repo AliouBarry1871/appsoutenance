@@ -126,12 +126,20 @@ import { SENEGAL_CITIES, SENEGAL_ZONES } from '../../../../core/constants/senega
                   <td class="p-4">
                     <span [class]="getStatusClass(item.status)"
                           class="px-2.5 py-1 text-xs font-bold rounded-full border">
-                      {{ item.status | formatEnum }}
+                      {{ (item.status === 'RESERVED' || item.status === 'RESERVE') ? 'RÉSERVÉ (En cours)' : (item.status | formatEnum) }}
                     </span>
                   </td>
                   <td class="p-4 text-right space-x-2 whitespace-nowrap">
+                    <!-- Si le bien est réservé : bouton direct pour le rendre à nouveau disponible -->
+                    <button *ngIf="item.status === 'RESERVED' || item.status === 'RESERVE'" 
+                            (click)="makeAvailableAgain(item)"
+                            class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-lg transition shadow-xs cursor-pointer inline-flex items-center gap-1"
+                            title="Remettre l'annonce en ligne comme disponible">
+                      <span>✓</span> Rendre disponible
+                    </button>
                     <!-- Changement de statut rapide -->
-                    <button (click)="cycleStatus(item)" 
+                    <button *ngIf="item.status !== 'RESERVED' && item.status !== 'RESERVE'"
+                            (click)="cycleStatus(item)" 
                             class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition cursor-pointer"
                             title="Changer le statut (Disponible / Loué / Vendu)">
                       Changer statut
@@ -449,21 +457,31 @@ import { SENEGAL_CITIES, SENEGAL_ZONES } from '../../../../core/constants/senega
           <div class="grid grid-cols-2 gap-3">
             
             <button type="button" (click)="selectedPaymentMethod = 'WAVE'"
-                    [class]="selectedPaymentMethod === 'WAVE' ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-500' : 'border-gray-200'"
+                    [class]="selectedPaymentMethod === 'WAVE' ? 'border-sky-500 bg-sky-50/60 ring-2 ring-sky-500 shadow-sm' : 'border-gray-200 hover:border-gray-300'"
                     class="p-3 border rounded-xl flex items-center gap-3 transition cursor-pointer text-left">
-              <span class="text-2xl">🌊</span>
+              <div class="w-10 h-10 rounded-xl overflow-hidden shadow-xs shrink-0 bg-[#1dc3f9]">
+                <img src="assets/images/wave-logo.svg" alt="Wave Sénégal" class="w-full h-full object-contain p-0.5" />
+              </div>
               <div>
-                <div class="text-xs font-bold text-gray-900">Wave Sénégal</div>
-                <div class="text-[10px] text-gray-500">Sans frais</div>
+                <div class="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                  <span>Wave Sénégal</span>
+                  <span class="text-[10px] bg-sky-100 text-sky-700 px-1 py-0.2 rounded font-semibold">1%</span>
+                </div>
+                <div class="text-[10px] text-gray-500">Paiement sans frais</div>
               </div>
             </button>
 
             <button type="button" (click)="selectedPaymentMethod = 'ORANGE_MONEY'"
-                    [class]="selectedPaymentMethod === 'ORANGE_MONEY' ? 'border-orange-500 bg-orange-50/50 ring-2 ring-orange-500' : 'border-gray-200'"
+                    [class]="selectedPaymentMethod === 'ORANGE_MONEY' ? 'border-orange-500 bg-orange-50/60 ring-2 ring-orange-500 shadow-sm' : 'border-gray-200 hover:border-gray-300'"
                     class="p-3 border rounded-xl flex items-center gap-3 transition cursor-pointer text-left">
-              <span class="text-2xl">🟠</span>
+              <div class="w-10 h-10 rounded-xl overflow-hidden shadow-xs shrink-0 bg-[#121212]">
+                <img src="assets/images/orange-money-logo.svg" alt="Orange Money" class="w-full h-full object-contain p-0.5" />
+              </div>
               <div>
-                <div class="text-xs font-bold text-gray-900">Orange Money</div>
+                <div class="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                  <span>Orange Money</span>
+                  <span class="text-[10px] bg-orange-100 text-orange-700 px-1 py-0.2 rounded font-semibold">OM</span>
+                </div>
                 <div class="text-[10px] text-gray-500">Sonatel SN</div>
               </div>
             </button>
@@ -659,9 +677,28 @@ export class AgencyDashboardPageComponent implements OnInit {
     }
   }
 
+  makeAvailableAgain(item: Property): void {
+    if (item.id) {
+      this.propertyService.updateStatus(item.id, 'AVAILABLE').subscribe({
+        next: (updated) => {
+          item.status = updated.status || 'AVAILABLE';
+          this.toastService.show(`L'annonce "${item.title}" est de nouveau disponible et visible pour tous.`, 'success');
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          item.status = 'AVAILABLE';
+          this.toastService.show(`L'annonce "${item.title}" est de nouveau disponible.`, 'success');
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+
   getStatusClass(status: any): string {
     const s = String(status);
-    if (s === 'AVAILABLE' || s === 'DISPONIBLE') {
+    if (s === 'RESERVED' || s === 'RESERVE') {
+      return 'bg-rose-100 text-rose-800 border-rose-200 font-bold';
+    } else if (s === 'AVAILABLE' || s === 'DISPONIBLE') {
       return 'bg-emerald-100 text-emerald-800 border-emerald-200';
     } else if (s === 'RENTED' || s === 'LOUE') {
       return 'bg-amber-100 text-amber-800 border-amber-200';

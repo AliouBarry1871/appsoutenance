@@ -81,6 +81,10 @@ export class PropertyService {
     return this.updateStatus(id, status);
   }
 
+  reserveProperty(id: number, data: { clientFullName: string; clientPhone: string; message?: string }): Observable<Property> {
+    return this.http.post<Property>(`${this.apiUrl}/${id}/reserve`, data);
+  }
+
   deleteProperty(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }

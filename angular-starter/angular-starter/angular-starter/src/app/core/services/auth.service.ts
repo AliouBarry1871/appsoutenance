@@ -34,6 +34,11 @@ export class AuthService {
   /** Observable public (lecture seule) de l'utilisateur connecté. */
   readonly currentUser$ = this.currentUserSubject.asObservable();
 
+  /** Valeur synchrone courante de l'utilisateur connecté. */
+  get currentUserValue(): AuthResponse | null {
+    return this.currentUserSubject.value;
+  }
+
   constructor(private http: HttpClient) {}
 
   /** Authentifie l'utilisateur et persiste le résultat en localStorage. */

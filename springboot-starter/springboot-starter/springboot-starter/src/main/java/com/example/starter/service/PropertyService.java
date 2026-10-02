@@ -26,6 +26,7 @@ public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final AgencyRepository agencyRepository;
     private final FileStorageService fileStorageService;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<Property> searchProperties(String city, String zone, PropertyType category, BigDecimal maxPrice, TransactionType transactionType) {
@@ -168,6 +169,42 @@ public class PropertyService {
         Property property = getPropertyAndVerifyOwner(propertyId, agencyEmail);
         property.setStatus(status);
         return propertyRepository.save(property);
+    }
+
+    @Transactional
+    public Property reserveProperty(Long propertyId, com.example.starter.dto.ReservationRequest request) {
+        Property property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Annonce introuvable"));
+
+        if (property.getStatus() == PropertyStatus.RESERVED) {
+            throw new IllegalStateException("Ce bien est déjà réservé.");
+        }
+
+        // 1. Mise à jour du statut vers RESERVED (l'annonce disparaît des annonces disponibles)
+        property.setStatus(PropertyStatus.RESERVED);
+        Property updated = propertyRepository.save(property);
+
+        // 2. Notification envoyée directement à l'agence immobilière propriétaire
+        if (property.getAgency() != null) {
+            String clientName = (request.getClientFullName() != null && !request.getClientFullName().isBlank())
+                    ? request.getClientFullName().trim() : "Un client";
+            String clientPhone = (request.getClientPhone() != null && !request.getClientPhone().isBlank())
+                    ? request.getClientPhone().trim() : "Non renseigné";
+
+            String title = "🏷️ Nouvelle réservation : " + property.getTitle();
+            String message = "Le client " + clientName + " (Numéro de téléphone : " + clientPhone + ")"
+                    + " a réservé votre bien \"" + property.getTitle() + "\" situé à " + property.getCity()
+                    + (property.getZone() != null ? " - " + property.getZone() : "") + ".\n"
+                    + "Veuillez contacter le client au " + clientPhone + " pour finaliser le dossier de location ou de vente.";
+
+            if (request.getMessage() != null && !request.getMessage().isBlank()) {
+                message += "\nMessage du client : \"" + request.getMessage().trim() + "\"";
+            }
+
+            notificationService.createNotification(property.getAgency(), title, message, "RESERVATION");
+        }
+
+        return updated;
     }
 
     @Transactional

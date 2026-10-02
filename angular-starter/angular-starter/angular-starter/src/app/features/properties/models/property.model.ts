@@ -19,6 +19,8 @@ export enum PropertyType {
 export enum PropertyStatus {
   AVAILABLE = 'AVAILABLE',
   DISPONIBLE = 'DISPONIBLE',
+  RESERVED = 'RESERVED',
+  RESERVE = 'RESERVE',
   RENTED = 'RENTED',
   LOUE = 'LOUE',
   SOLD = 'SOLD',

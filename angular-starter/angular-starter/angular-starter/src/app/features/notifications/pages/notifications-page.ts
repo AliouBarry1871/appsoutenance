@@ -44,11 +44,13 @@ import { ToastService } from '../../../core/services/toast.service';
                  [ngClass]="{
                    'bg-blue-100 text-blue-700': notif.type === 'INFO',
                    'bg-emerald-100 text-emerald-700': notif.type === 'SUCCESS',
-                   'bg-amber-100 text-amber-700': notif.type === 'ALERT'
+                   'bg-amber-100 text-amber-700': notif.type === 'ALERT',
+                   'bg-purple-100 text-purple-700': notif.type === 'RESERVATION'
                  }">
               <span *ngIf="notif.type === 'INFO'">ℹ️</span>
               <span *ngIf="notif.type === 'SUCCESS'">🎉</span>
               <span *ngIf="notif.type === 'ALERT'">⚠️</span>
+              <span *ngIf="notif.type === 'RESERVATION'">🏷️</span>
             </div>
 
             <div class="flex-grow space-y-1">

@@ -34,7 +34,7 @@ import { SENEGAL_CITIES, SENEGAL_ZONES } from '../../../core/constants/senegal-l
           </h1>
 
           <p class="text-white text-sm sm:text-base max-w-2xl mx-auto leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)] font-semibold">
-            Villas de prestige, appartements meublés, studios et terrains vérifiés à Dakar, Saly, Thiès et dans tout le pays. Échangez directement avec des professionnels certifiés.
+            Villas de prestige, appartements meublés, studios et terrains disponibles à Dakar, Saly, Thiès et dans tout le pays.
           </p>
 
           <!-- Boîte de Recherche & Filtres Multi-critères -->
@@ -299,7 +299,8 @@ export class HomePageComponent implements OnInit {
 
     this.propertyService.getProperties(activeFilters).subscribe({
       next: (data) => {
-        this.properties = data || [];
+        // Seules les annonces DISPONIBLES sont affichées (les biens réservés sont automatiquement masqués)
+        this.properties = (data || []).filter(p => !p.status || p.status === 'AVAILABLE' || p.status === 'DISPONIBLE');
         this.totalProperties = this.properties.length;
         this.locationCount = this.properties.filter(p => (p.transactionType || p.type) === 'LOCATION').length;
         this.venteCount = this.properties.filter(p => (p.transactionType || p.type) === 'VENTE').length;

@@ -35,6 +35,17 @@ type ImageType = string | { imageUrl?: string; url?: string } | null;
               <span>📍</span> Localisation & Guidage
             </a>
 
+            <!-- Bouton Réserver ce bien (si disponible) -->
+            <button *ngIf="isPropertyAvailable()" 
+                    (click)="openReserveModal()"
+                    class="px-4 py-2 text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+              <span>🏷️</span> Réserver
+            </button>
+            <span *ngIf="!isPropertyAvailable()" 
+                  class="px-3.5 py-2 text-xs font-bold text-amber-900 bg-amber-100 rounded-xl border border-amber-300 flex items-center gap-1.5">
+              <span>🔒</span> Bien réservé
+            </span>
+
             <!-- Bouton Signaler -->
             <button (click)="openReportModal = true"
                     class="px-3.5 py-2 text-xs font-semibold text-gray-500 hover:text-red-600 bg-white border border-gray-200 rounded-xl shadow-sm transition hover:bg-red-50 cursor-pointer flex items-center gap-1.5">
@@ -389,6 +400,63 @@ type ImageType = string | { imageUrl?: string; url?: string } | null;
       </div>
     </div>
 
+    <!-- Modal Réservation de bien -->
+    <div *ngIf="openReservationModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border border-gray-100 animate-fadeIn">
+        <div class="flex items-center justify-between border-b pb-3">
+          <div class="flex items-center gap-2.5">
+            <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg">🏷️</span>
+            <div>
+              <h3 class="text-base font-black text-gray-900">Réserver ce logement</h3>
+              <p class="text-xs text-gray-500">Bloquez ce bien avant qu'il ne soit pris</p>
+            </div>
+          </div>
+          <button (click)="openReservationModal = false" class="text-gray-400 hover:text-gray-600 text-lg cursor-pointer">✕</button>
+        </div>
+
+        <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-xs text-emerald-900 leading-relaxed">
+          <strong>ℹ️ Information importante :</strong> Dès validation, cette annonce sera automatiquement <strong>retirée des annonces disponibles</strong> et vos coordonnées seront transmises à l'agence <strong>{{ getAgencyName() }}</strong> afin de vous contacter directement pour finaliser.
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">
+              Nom complet <span class="text-red-500">*</span>
+            </label>
+            <input type="text" [(ngModel)]="clientFullName" placeholder="Ex: Mouhamed Fall"
+                   class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">
+              Numéro de téléphone <span class="text-red-500">*</span>
+            </label>
+            <input type="tel" [(ngModel)]="clientPhone" placeholder="Ex: +221 77 123 45 67"
+                   class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">
+              Message ou précisions (optionnel)
+            </label>
+            <textarea [(ngModel)]="reservationMessage" rows="2" placeholder="Ex: Je souhaite visiter ce bien rapidement..."
+                      class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button (click)="openReservationModal = false" class="px-4 py-2 bg-gray-100 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-200 transition cursor-pointer">
+            Annuler
+          </button>
+          <button (click)="submitReservation()" [disabled]="submittingReservation || !clientFullName.trim() || !clientPhone.trim()"
+                  class="px-5 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+            <span *ngIf="submittingReservation" class="inline-block animate-spin h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full"></span>
+            <span>{{ submittingReservation ? 'Réservation...' : 'Confirmer la réservation' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Template Chargement -->
     <ng-template #loadingTemplate>
       <div class="min-h-[50vh] flex flex-col items-center justify-center text-center py-20">
@@ -435,6 +503,12 @@ export class PropertyDetailPageComponent implements OnInit {
   reportDetails = '';
   submittingReport = false;
 
+  openReservationModal = false;
+  clientFullName = '';
+  clientPhone = '';
+  reservationMessage = '';
+  submittingReservation = false;
+
   private readonly defaultFallback = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80';
 
   constructor(
@@ -479,6 +553,16 @@ export class PropertyDetailPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.isLoggedIn = this.authService.isLoggedIn();
+    const user = this.authService.currentUserValue;
+    if (user) {
+      if (user.fullName) {
+        this.clientFullName = user.fullName;
+      }
+      if ((user as any).phone) {
+        this.clientPhone = (user as any).phone;
+      }
+    }
+
     this.route.paramMap.subscribe(params => {
       const id = Number(params.get('id'));
       if (id) {
@@ -715,5 +799,62 @@ export class PropertyDetailPageComponent implements OnInit {
 
   onImageError(event: Event): void {
     (event.target as HTMLImageElement).src = this.defaultFallback;
+  }
+
+  isPropertyAvailable(): boolean {
+    if (!this.property) return false;
+    const status = (this.property.status || '').toString().toUpperCase();
+    return !status || status === 'AVAILABLE' || status === 'DISPONIBLE';
+  }
+
+  openReserveModal(): void {
+    const user = this.authService.currentUserValue;
+    if (user && !this.clientFullName) {
+      if (user.fullName) {
+        this.clientFullName = user.fullName;
+      }
+      if ((user as any).phone && !this.clientPhone) {
+        this.clientPhone = (user as any).phone;
+      }
+    }
+    this.openReservationModal = true;
+  }
+
+  submitReservation(): void {
+    if (!this.property?.id) return;
+    if (!this.clientFullName.trim()) {
+      this.toastService.show('Veuillez renseigner votre nom complet.', 'warning');
+      return;
+    }
+    if (!this.clientPhone.trim()) {
+      this.toastService.show('Veuillez renseigner votre numéro de téléphone.', 'warning');
+      return;
+    }
+
+    this.submittingReservation = true;
+    this.propertyService.reserveProperty(this.property.id, {
+      clientFullName: this.clientFullName.trim(),
+      clientPhone: this.clientPhone.trim(),
+      message: this.reservationMessage.trim() || undefined
+    }).subscribe({
+      next: (updatedProp) => {
+        this.submittingReservation = false;
+        this.openReservationModal = false;
+        if (this.property) {
+          this.property.status = 'RESERVED' as any;
+        }
+        this.toastService.show(
+          'Félicitations ! Votre réservation a été enregistrée avec succès. Ce bien a été retiré des annonces publiques et l\'agence a été notifiée de vos coordonnées.',
+          'success',
+          7000
+        );
+      },
+      error: (err) => {
+        this.submittingReservation = false;
+        console.error('Erreur réservation:', err);
+        const errMsg = err?.error?.message || err?.message || 'Erreur lors de la réservation du bien.';
+        this.toastService.show(errMsg, 'error');
+      }
+    });
   }
 }

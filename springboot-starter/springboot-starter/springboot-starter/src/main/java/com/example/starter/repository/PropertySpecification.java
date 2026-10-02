@@ -38,6 +38,12 @@ public class PropertySpecification {
                 predicates.add(cb.equal(root.get("transactionType"), transactionType));
             }
 
+            // Seules les annonces disponibles sont visibles au public (exclut RESERVED, RENTED, SOLD, UNAVAILABLE)
+            predicates.add(cb.or(
+                    cb.isNull(root.get("status")),
+                    cb.equal(root.get("status"), com.example.starter.domain.PropertyStatus.AVAILABLE)
+            ));
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
