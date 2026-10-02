@@ -9,6 +9,7 @@ export interface AuthResponse {
   role: string;
   email: string;
   fullName: string;
+  phone?: string;
 }
 
 /** Données envoyées lors de l'inscription d'un compte agence ou client. */

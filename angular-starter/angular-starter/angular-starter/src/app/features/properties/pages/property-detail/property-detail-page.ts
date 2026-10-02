@@ -450,11 +450,13 @@ type ImageType = string | { imageUrl?: string; url?: string } | null;
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-gray-700 mb-1">
-              Message ou précisions (optionnel)
-            </label>
-            <textarea [(ngModel)]="reservationMessage" rows="2" placeholder="Ex: Je souhaite visiter ce bien rapidement..."
-                      class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-bold text-gray-700">Message transmis à l'agence</label>
+              <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-200">Généré automatiquement</span>
+            </div>
+            <textarea [(ngModel)]="reservationMessage" rows="3"
+                      class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none leading-relaxed text-gray-800"></textarea>
+            <p class="text-[11px] text-gray-400 mt-0.5">Vous pouvez personnaliser ce message si vous le souhaitez.</p>
           </div>
         </div>
 
@@ -823,14 +825,33 @@ export class PropertyDetailPageComponent implements OnInit {
 
   openReserveModal(): void {
     const user = this.authService.currentUserValue;
-    if (user && !this.clientFullName) {
+    if (user) {
       if (user.fullName) {
         this.clientFullName = user.fullName;
       }
-      if ((user as any).phone && !this.clientPhone) {
-        this.clientPhone = (user as any).phone;
+      if (user.phone) {
+        this.clientPhone = user.phone;
       }
     }
+
+    // Récupération de secours depuis le stockage local si nécessaire
+    try {
+      const stored = localStorage.getItem('auth_user');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (!this.clientFullName && parsed.fullName) this.clientFullName = parsed.fullName;
+        if (!this.clientPhone && parsed.phone) this.clientPhone = parsed.phone;
+      }
+    } catch (e) {}
+
+    // Message pré-programmé professionnel selon le type de transaction (Location ou Vente)
+    const type = String(this.property?.transactionType || this.property?.type || '').toUpperCase();
+    if (type === 'VENTE') {
+      this.reservationMessage = `Bonjour, je souhaite acheter cette maison (${this.property?.title || 'ce bien'}). Merci de me recontacter afin de convenir d'un rendez-vous et échanger sur les modalités d'acquisition.`;
+    } else {
+      this.reservationMessage = `Bonjour, je souhaite prendre cette maison en location (${this.property?.title || 'ce bien'}). Merci de me recontacter afin d'organiser une visite et finaliser les formalités.`;
+    }
+
     this.openReservationModal = true;
   }
 
