@@ -63,7 +63,7 @@ export class PropertyListComponent implements OnInit {
     this.loading = true;
     this.propertyService.getProperties(filters).subscribe({
       next: (data: Property[]) => {
-        this.properties = data;
+        this.properties = (data || []).filter(p => !p.status || p.status === 'AVAILABLE' || p.status === 'DISPONIBLE');
         this.loading = false;
         this.cdr.detectChanges(); // 👈 Évite le blocage d'interface
       },

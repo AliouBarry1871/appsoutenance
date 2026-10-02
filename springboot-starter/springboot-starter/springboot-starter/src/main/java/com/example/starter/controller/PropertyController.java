@@ -54,8 +54,16 @@ public class PropertyController {
     @PostMapping("/{id}/reserve")
     public ResponseEntity<Property> reserveProperty(
             @PathVariable Long id,
-            @RequestBody @jakarta.validation.Valid com.example.starter.dto.ReservationRequest request
+            @RequestBody @jakarta.validation.Valid com.example.starter.dto.ReservationRequest request,
+            Authentication authentication
     ) {
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
+            boolean isAgency = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_AGENCY") || a.getAuthority().equalsIgnoreCase("AGENCY"));
+            if (isAgency) {
+                throw new IllegalStateException("Les agences immobilières ne peuvent pas réserver de biens.");
+            }
+        }
         return ResponseEntity.ok(propertyService.reserveProperty(id, request));
     }
 

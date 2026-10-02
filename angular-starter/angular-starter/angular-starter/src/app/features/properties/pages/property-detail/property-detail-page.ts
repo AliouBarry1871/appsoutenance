@@ -35,8 +35,8 @@ type ImageType = string | { imageUrl?: string; url?: string } | null;
               <span>📍</span> Localisation & Guidage
             </a>
 
-            <!-- Bouton Réserver ce bien (si disponible) -->
-            <button *ngIf="isPropertyAvailable()" 
+            <!-- Bouton Réserver ce bien (réservé aux clients & chercheurs de logement) -->
+            <button *ngIf="canReserve()" 
                     (click)="openReserveModal()"
                     type="button"
                     class="px-5 py-2 text-xs sm:text-sm font-black text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 rounded-xl shadow-md transition-all duration-150 flex items-center gap-2 cursor-pointer border border-emerald-500">
@@ -332,8 +332,8 @@ type ImageType = string | { imageUrl?: string; url?: string } | null;
 
               <!-- Boutons de Contact Direct avec l'Agence & Réservation -->
               <div class="space-y-2.5 pt-2">
-                <!-- Bouton Réserver ce bien (action principale) -->
-                <button *ngIf="isPropertyAvailable()" 
+                <!-- Bouton Réserver ce bien (action principale réservée aux clients) -->
+                <button *ngIf="canReserve()" 
                         (click)="openReserveModal()"
                         type="button"
                         class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white rounded-xl font-black text-sm transition shadow-md cursor-pointer flex items-center justify-center gap-2 border border-emerald-500">
@@ -817,6 +817,17 @@ export class PropertyDetailPageComponent implements OnInit {
     (event.target as HTMLImageElement).src = this.defaultFallback;
   }
 
+  isAgencyUser(): boolean {
+    const user = this.authService.currentUserValue;
+    if (!user || !user.role) return false;
+    const r = String(user.role).toUpperCase();
+    return r.includes('AGENCY') || r.includes('ADMIN');
+  }
+
+  canReserve(): boolean {
+    return this.isPropertyAvailable() && !this.isAgencyUser();
+  }
+
   isPropertyAvailable(): boolean {
     if (!this.property) return true;
     const s = String(this.property.status || '').trim().toUpperCase();
@@ -824,6 +835,11 @@ export class PropertyDetailPageComponent implements OnInit {
   }
 
   openReserveModal(): void {
+    if (this.isAgencyUser()) {
+      this.toastService.show('Les comptes agences immobilières ne peuvent pas effectuer de réservations.', 'info');
+      return;
+    }
+
     const user = this.authService.currentUserValue;
     if (user) {
       if (user.fullName) {
@@ -853,6 +869,7 @@ export class PropertyDetailPageComponent implements OnInit {
     }
 
     this.openReservationModal = true;
+    this.cdr.detectChanges();
   }
 
   submitReservation(): void {
@@ -867,6 +884,8 @@ export class PropertyDetailPageComponent implements OnInit {
     }
 
     this.submittingReservation = true;
+    this.cdr.detectChanges();
+
     this.propertyService.reserveProperty(this.property.id, {
       clientFullName: this.clientFullName.trim(),
       clientPhone: this.clientPhone.trim(),
@@ -874,18 +893,30 @@ export class PropertyDetailPageComponent implements OnInit {
     }).subscribe({
       next: (updatedProp) => {
         this.submittingReservation = false;
+        // 1. Fermeture immédiate du formulaire
         this.openReservationModal = false;
+        // 2. Mise à jour instantanée du statut du bien
         if (this.property) {
           this.property.status = 'RESERVED' as any;
         }
+        // 3. Forcer le rafraîchissement immédiat de l'affichage
+        this.cdr.detectChanges();
+
+        // 4. Message de succès clair
         this.toastService.show(
-          'Félicitations ! Votre réservation a été enregistrée avec succès. Ce bien a été retiré des annonces publiques et l\'agence a été notifiée de vos coordonnées.',
+          'Félicitations ! Votre réservation a été enregistrée avec succès. Ce bien a été retiré des annonces disponibles et l\'agence a été notifiée de vos coordonnées.',
           'success',
-          7000
+          6000
         );
+
+        // 5. Redirection vers les annonces pour voir la liste actualisée
+        setTimeout(() => {
+          this.router.navigate(['/properties']);
+        }, 1800);
       },
       error: (err) => {
         this.submittingReservation = false;
+        this.cdr.detectChanges();
         console.error('Erreur réservation:', err);
         const errMsg = err?.error?.message || err?.message || 'Erreur lors de la réservation du bien.';
         this.toastService.show(errMsg, 'error');
