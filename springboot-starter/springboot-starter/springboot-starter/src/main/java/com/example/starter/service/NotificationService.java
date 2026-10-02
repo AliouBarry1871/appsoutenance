@@ -20,35 +20,43 @@ public class NotificationService {
 
     @Transactional(readOnly = true)
     public List<Notification> getUserNotifications(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé : " + email));
-        return notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        if (email == null || email.isBlank()) {
+            return List.of();
+        }
+        return userRepository.findByEmailIgnoreCase(email.trim())
+                .map(user -> notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId()))
+                .orElse(List.of());
     }
 
     @Transactional(readOnly = true)
     public long getUnreadCount(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé : " + email));
-        return notificationRepository.countByUserIdAndReadStatusFalse(user.getId());
+        if (email == null || email.isBlank()) {
+            return 0L;
+        }
+        return userRepository.findByEmailIgnoreCase(email.trim())
+                .map(user -> notificationRepository.countByUserIdAndReadStatusFalse(user.getId()))
+                .orElse(0L);
     }
 
     @Transactional
     public void markAsRead(Long id, String email) {
-        Notification notif = notificationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Notification non trouvée : " + id));
-        if (notif.getUser().getEmail().equalsIgnoreCase(email)) {
-            notif.setReadStatus(true);
-            notificationRepository.save(notif);
-        }
+        if (id == null || email == null) return;
+        notificationRepository.findById(id).ifPresent(notif -> {
+            if (notif.getUser() != null && notif.getUser().getEmail().equalsIgnoreCase(email.trim())) {
+                notif.setReadStatus(true);
+                notificationRepository.save(notif);
+            }
+        });
     }
 
     @Transactional
     public void markAllAsRead(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé : " + email));
-        List<Notification> notifs = notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
-        notifs.forEach(n -> n.setReadStatus(true));
-        notificationRepository.saveAll(notifs);
+        if (email == null || email.isBlank()) return;
+        userRepository.findByEmailIgnoreCase(email.trim()).ifPresent(user -> {
+            List<Notification> notifs = notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+            notifs.forEach(n -> n.setReadStatus(true));
+            notificationRepository.saveAll(notifs);
+        });
     }
 
     @Transactional

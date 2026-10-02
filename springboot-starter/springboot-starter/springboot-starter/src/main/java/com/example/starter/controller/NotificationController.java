@@ -4,9 +4,7 @@ import com.example.starter.domain.Notification;
 import com.example.starter.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,29 +18,35 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<Notification>> getUserNotifications(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(notificationService.getUserNotifications(userDetails.getUsername()));
+    public ResponseEntity<List<Notification>> getUserNotifications(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return ResponseEntity.ok(List.of());
+        }
+        return ResponseEntity.ok(notificationService.getUserNotifications(authentication.getName()));
     }
 
     @GetMapping("/unread-count")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Map<String, Long>> getUnreadCount(@AuthenticationPrincipal UserDetails userDetails) {
-        long count = notificationService.getUnreadCount(userDetails.getUsername());
+    public ResponseEntity<Map<String, Long>> getUnreadCount(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return ResponseEntity.ok(Map.of("unreadCount", 0L));
+        }
+        long count = notificationService.getUnreadCount(authentication.getName());
         return ResponseEntity.ok(Map.of("unreadCount", count));
     }
 
     @PatchMapping("/{id}/read")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> markAsRead(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
-        notificationService.markAsRead(id, userDetails.getUsername());
+    public ResponseEntity<Void> markAsRead(@PathVariable Long id, Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
+            notificationService.markAsRead(id, authentication.getName());
+        }
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/read-all")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> markAllAsRead(@AuthenticationPrincipal UserDetails userDetails) {
-        notificationService.markAllAsRead(userDetails.getUsername());
+    public ResponseEntity<Void> markAllAsRead(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
+            notificationService.markAllAsRead(authentication.getName());
+        }
         return ResponseEntity.noContent().build();
     }
 }
