@@ -19,19 +19,27 @@ public class NotificationController {
 
     @GetMapping
     public ResponseEntity<List<Notification>> getUserNotifications(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+        try {
+            if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.ok(List.of());
+            }
+            return ResponseEntity.ok(notificationService.getUserNotifications(authentication.getName()));
+        } catch (Exception e) {
             return ResponseEntity.ok(List.of());
         }
-        return ResponseEntity.ok(notificationService.getUserNotifications(authentication.getName()));
     }
 
     @GetMapping("/unread-count")
     public ResponseEntity<Map<String, Long>> getUnreadCount(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+        try {
+            if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+                return ResponseEntity.ok(Map.of("unreadCount", 0L));
+            }
+            long count = notificationService.getUnreadCount(authentication.getName());
+            return ResponseEntity.ok(Map.of("unreadCount", count));
+        } catch (Exception e) {
             return ResponseEntity.ok(Map.of("unreadCount", 0L));
         }
-        long count = notificationService.getUnreadCount(authentication.getName());
-        return ResponseEntity.ok(Map.of("unreadCount", count));
     }
 
     @PatchMapping("/{id}/read")

@@ -20,22 +20,42 @@ public class NotificationService {
 
     @Transactional(readOnly = true)
     public List<Notification> getUserNotifications(String email) {
-        if (email == null || email.isBlank()) {
+        try {
+            if (email == null || email.isBlank()) {
+                return List.of();
+            }
+            return userRepository.findByEmailIgnoreCase(email.trim())
+                    .map(user -> {
+                        try {
+                            return notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+                        } catch (Exception e) {
+                            return List.<Notification>of();
+                        }
+                    })
+                    .orElse(List.of());
+        } catch (Exception e) {
             return List.of();
         }
-        return userRepository.findByEmailIgnoreCase(email.trim())
-                .map(user -> notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId()))
-                .orElse(List.of());
     }
 
     @Transactional(readOnly = true)
     public long getUnreadCount(String email) {
-        if (email == null || email.isBlank()) {
+        try {
+            if (email == null || email.isBlank()) {
+                return 0L;
+            }
+            return userRepository.findByEmailIgnoreCase(email.trim())
+                    .map(user -> {
+                        try {
+                            return notificationRepository.countByUserIdAndReadStatusFalse(user.getId());
+                        } catch (Exception e) {
+                            return 0L;
+                        }
+                    })
+                    .orElse(0L);
+        } catch (Exception e) {
             return 0L;
         }
-        return userRepository.findByEmailIgnoreCase(email.trim())
-                .map(user -> notificationRepository.countByUserIdAndReadStatusFalse(user.getId()))
-                .orElse(0L);
     }
 
     @Transactional
