@@ -120,7 +120,7 @@ export interface NotificationItem {
   id: number;
   title: string;
   message: string;
-  type: 'INFO' | 'SUCCESS' | 'ALERT';
+  type: 'INFO' | 'SUCCESS' | 'ALERT' | 'RESERVATION' | string;
   readStatus: boolean;
   createdAt: string;
 }
